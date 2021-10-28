@@ -23,9 +23,9 @@ public class JdbcConnectionManager implements ConnectionManager {
     private static final String MSG_DRV_DEREG_FAIL = "Driver deregistration failed";
 
     private static final String MSG_CONN_OPEN_SUCCESS = "Connection open succeeded";
-    private static final String MSG_CONN_OPEN_FAIL = "Connection open failed";
+    private static final String MSG_TMPL_CONN_OPEN_FAIL = "Connection open failed (%s)";
     private static final String MSG_CONN_CLOSE_SUCCESS = "Connection close succeeded";
-    private static final String MSG_CONN_CLOSE_FAIL = "Connection close failed";
+    private static final String MSG_TMPL_CONN_CLOSE_FAIL = "Connection close failed (%s)";
 
     private static JdbcConnectionManager instance;
 
@@ -57,7 +57,7 @@ public class JdbcConnectionManager implements ConnectionManager {
             logger.fatal(MSG_DRV_REG_FAIL);
             //todo abort app
         } catch (SQLException e) {
-            logger.fatal(MSG_CONN_OPEN_FAIL);
+            logger.fatal(String.format(MSG_TMPL_CONN_OPEN_FAIL, e.getMessage()));
             //todo abort app
         }
     }
@@ -72,7 +72,7 @@ public class JdbcConnectionManager implements ConnectionManager {
         } catch (ConnectionManagerException e) {
             logger.error(MSG_DRV_DEREG_FAIL);
         } catch (SQLException e) {
-            logger.error(MSG_CONN_CLOSE_FAIL);
+            logger.error(String.format(MSG_TMPL_CONN_CLOSE_FAIL, e.getMessage()));
         }
     }
 
