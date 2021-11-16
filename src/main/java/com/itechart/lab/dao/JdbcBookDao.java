@@ -7,7 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcBookDao extends AbstractDao<Book> implements BookDao {
     static final String TABLE_NAME = "book";
@@ -22,27 +24,32 @@ public class JdbcBookDao extends AbstractDao<Book> implements BookDao {
     static final String COLUMN_REMAINING_AMOUNT = "remaining_amount";
     static final String COLUMN_BOOK_DESCRIPTION = "book_description";
 
-    private static JdbcBookDao instance;
+    private static final JdbcBookDao instance = new JdbcBookDao();
 
-    final String bookColumnNamesString;
+    private static final String SQL_OFFSET_LIMIT = " LIMIT ?, ?";
+    private static final String SQL_TEMPLATE_SELECT_BOOKS = SQL_SELECT + SQL_OFFSET_LIMIT;
+    private static final String SQL_TEMPLATE_SELECT_AVAILABLE_BOOKS
+            = SQL_SELECT + " WHERE %s > %d" + SQL_OFFSET_LIMIT;
+    private static final String SQL_GET_AVAILABLE_BOOKS_AMOUNT = SQL_SELECT + " WHERE %s > 0";
 
-    private final String sqlFindAvailableBooks;
+    private final String sqlFindBookByIsbn;
+    private final String sqlFindBooksInRange;
+    private final String sqlFindAvailableBooksInRange;
+    private final String sqlGetAvailableBooksAmount;
 
     private JdbcBookDao() {
         super(TABLE_NAME, COLUMN_ID, COLUMN_COVER_URL, COLUMN_TITLE, COLUMN_PUBLISHER_ID,
                 COLUMN_PUBLISH_YEAR, COLUMN_PAGE_COUNT, COLUMN_ISBN, COLUMN_TOTAL_AMOUNT,
                 COLUMN_REMAINING_AMOUNT, COLUMN_BOOK_DESCRIPTION);
-        bookColumnNamesString = AbstractDao.getColumnNamesString(COLUMN_ID, COLUMN_COVER_URL,
-                COLUMN_TITLE, COLUMN_PUBLISHER_ID, COLUMN_PUBLISH_YEAR, COLUMN_PAGE_COUNT,
-                COLUMN_ISBN, COLUMN_TOTAL_AMOUNT, COLUMN_REMAINING_AMOUNT, COLUMN_BOOK_DESCRIPTION);
-        sqlFindAvailableBooks = String.format(SQL_TEMPLATE_FIND_ALL + SQL_TEMPLATE_WHERE_CLAUSE,
-                bookColumnNamesString, TABLE_NAME, COLUMN_REMAINING_AMOUNT + " > 0");
+        sqlFindBookByIsbn = String.format(SQL_SELECT_BY, columnNames, TABLE_NAME, COLUMN_ISBN);
+        sqlFindAvailableBooksInRange = String.format(SQL_TEMPLATE_SELECT_AVAILABLE_BOOKS,
+                columnNames, TABLE_NAME, COLUMN_REMAINING_AMOUNT, 0);
+        sqlFindBooksInRange = String.format(SQL_TEMPLATE_SELECT_BOOKS, columnNames, TABLE_NAME);
+        sqlGetAvailableBooksAmount = String.format(SQL_GET_AVAILABLE_BOOKS_AMOUNT,
+                SQL_FUNCTION_COUNT, TABLE_NAME, COLUMN_REMAINING_AMOUNT);
     }
 
     public static JdbcBookDao getInstance() {
-        if (instance == null) {
-            instance = new JdbcBookDao();
-        }
         return instance;
     }
 
@@ -91,15 +98,34 @@ public class JdbcBookDao extends AbstractDao<Book> implements BookDao {
     }
 
     @Override
-    public List<Book> findAvailableBooks() throws DaoException {
-        return findPreparedEntities(null, sqlFindAvailableBooks);
+    public List<Book> findBooksBy(String title, List<String> authors,
+                                  List<String> genres, String description) throws DaoException {
+        String searchQuery = new JdbcBookSearchQueryBuilder(columnNames, title, authors,
+                genres, description).build();
+        if (searchQuery == null) {
+            return Collections.emptyList();
+        }
+        return findPreparedEntities(null, searchQuery);
     }
 
     @Override
-    public List<Book> findBooksBy(String title, String[] authors,
-                                  Integer[] genreIds, String description) throws DaoException {
-        String searchQuery = new JdbcBookSearchQueryBuilder(bookColumnNamesString, title, authors,
-                genreIds, description).build();
-        return findPreparedEntities(null, searchQuery);
+    public Optional<Book> findByIsbn(String isbn) throws DaoException {
+        return takeFirst(findPreparedEntities(
+                s -> s.setString(1, isbn), sqlFindBookByIsbn));
+    }
+
+    @Override
+    public List<Book> findBooksInRange(int offset, int amount, boolean availableOnly)
+            throws DaoException {
+        String sql = availableOnly ? sqlFindAvailableBooksInRange : sqlFindBooksInRange;
+        return findPreparedEntities(s -> {
+            s.setInt(1, offset);
+            s.setInt(2, amount);
+        }, sql);
+    }
+
+    @Override
+    public int getAvailableBooksAmount() throws DaoException {
+        return getRowsAmount(sqlGetAvailableBooksAmount);
     }
 }

@@ -1,0 +1,42 @@
+.container {
+    margin-bottom: 25px;
+}
+
+#table-tools, .input-group, textarea {
+    margin-bottom: .5rem;
+}
+
+#table-tools .btn-group {
+    padding-left: .7rem;
+}
+
+th, .checkbox-column, .publish-year-column, .available-copies-column {
+    text-align: center;
+}
+
+#book-cover-column img, #book-cover-column button {
+    width: 100%;
+    margin-bottom: .5rem;
+}
+
+#availability-label {
+    color: white;
+    padding: .5rem;
+    text-align: center;
+}
+
+.input-group-text {
+    width: 7.5rem;
+}
+
+textarea {
+    resize: none;
+}
+
+#live-search-result button {
+    margin: 0 .5rem .5rem 0;
+}
+
+#borrows-table tr td {
+    vertical-align: middle;
+}

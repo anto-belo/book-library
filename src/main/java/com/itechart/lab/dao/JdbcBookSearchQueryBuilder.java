@@ -1,98 +1,92 @@
 package com.itechart.lab.dao;
 
-import static com.itechart.lab.dao.AbstractDao.SQL_TEMPLATE_FIND_ALL;
-import static com.itechart.lab.dao.AbstractDao.SQL_TEMPLATE_IN;
-import static com.itechart.lab.dao.AbstractDao.SQL_TEMPLATE_SUB_QUERY_IN;
+import com.itechart.lab.util.RangeFormatter;
+
+import java.util.List;
+
+import static com.itechart.lab.dao.AbstractDao.SQL_SELECT;
+import static com.itechart.lab.dao.AbstractDao.SQL_SELECT_IN;
 
 public class JdbcBookSearchQueryBuilder {
-    private static final String WHERE_CLAUSE = " WHERE ";
-    private static final String LIKE_CLAUSE = "%s LIKE '%%%s%%'";
-    private static final String IN_CLAUSE = "%s IN (%s)";
-    private static final String AND_WORD = " AND ";
+    private static final String SQL_WHERE_LIKE = " WHERE %s LIKE %s";
+    private static final String SQL_AND_LIKE = " AND %s LIKE %s";
+    private static final String SQL_WHERE_IN = " WHERE %s IN (%s)";
+    private static final String SQL_AND_IN = " AND %s IN (%s)";
 
     private final String bookColumnNamesString;
     private final String title;
-    private final String[] authors;
-    private final Integer[] genreIds;
+    private final List<String> authors;
+    private final List<String> genres;
     private final String description;
     private StringBuilder query;
+    private boolean anyParams;
 
-    public JdbcBookSearchQueryBuilder(String bookColumnNamesString, String title, String[] authors,
-                                      Integer[] genreIds, String description) {
+    public JdbcBookSearchQueryBuilder(String bookColumnNamesString, String title,
+                                      List<String> authors, List<String> genres,
+                                      String description) {
         this.bookColumnNamesString = bookColumnNamesString;
         this.title = title;
         this.authors = authors;
-        this.genreIds = genreIds;
+        this.genres = genres;
         this.description = description;
     }
 
     public String build() {
-        query = new StringBuilder(String.format(SQL_TEMPLATE_FIND_ALL,
-                bookColumnNamesString, JdbcBookDao.TABLE_NAME) + WHERE_CLAUSE);
-        boolean anyParams = false;
-        if (title != null) {
-            query.append(String.format(LIKE_CLAUSE, JdbcBookDao.COLUMN_TITLE, title));
+        query = new StringBuilder(String.format(SQL_SELECT,
+                bookColumnNamesString, JdbcBookDao.TABLE_NAME));
+        if (title != null && !title.isEmpty()) {
+            query.append(String.format(SQL_WHERE_LIKE,
+                    JdbcBookDao.COLUMN_TITLE, "'%" + title + "%'"));
             anyParams = true;
         }
-        if (authors != null) {
-            if (anyParams) {
-                query.append(AND_WORD);
-            }
-            anyParams = true;
+        if (authors != null && authors.size() != 0) {
             addAuthorsToQuery();
+            anyParams = true;
         }
-        if (genreIds != null) {
+        if (genres != null && genres.size() != 0) {
+            addGenresToQuery();
+            anyParams = true;
+        }
+        if (description != null && !description.isEmpty()) {
             if (anyParams) {
-                query.append(AND_WORD);
+                query.append(String.format(SQL_AND_LIKE,
+                        JdbcBookDao.COLUMN_BOOK_DESCRIPTION, "'%" + description + "%'"));
+            } else {
+                query.append(String.format(SQL_WHERE_LIKE,
+                        JdbcBookDao.COLUMN_BOOK_DESCRIPTION, "'%" + description + "%'"));
             }
             anyParams = true;
-            addGenresToQuery();
         }
-        if (description != null) {
-            if (anyParams) {
-                query.append(AND_WORD);
-            }
-            query.append(String.format(LIKE_CLAUSE, JdbcBookDao.COLUMN_BOOK_DESCRIPTION, description));
-        }
-        return query.toString();
-    }
-
-    private void addGenresToQuery() {
-        String selectBookIds = String.format(SQL_TEMPLATE_FIND_ALL + SQL_TEMPLATE_SUB_QUERY_IN,
-                EnumDaoFactory.BOOK_GENRE_COLUMN_BOOK_ID, EnumDaoFactory.BOOK_GENRE_TABLE_NAME,
-                EnumDaoFactory.BOOK_GENRE_COLUMN_GENRE_ID, getIntegersEnumerationString(genreIds));
-        query.append(String.format(IN_CLAUSE, JdbcBookDao.COLUMN_ID, selectBookIds));
+        return anyParams ? query.toString() : null;
     }
 
     private void addAuthorsToQuery() {
-        String selectAuthorIds = String.format(SQL_TEMPLATE_FIND_ALL + SQL_TEMPLATE_IN,
-                EnumDaoFactory.AUTHOR_COLUMN_ID, EnumDaoFactory.AUTHOR_TABLE_NAME, EnumDaoFactory.AUTHOR_COLUMN_NAME);
-        selectAuthorIds = selectAuthorIds.replace("?", getStringsEnumerationString(authors));
-        String selectBookIds = String.format(SQL_TEMPLATE_FIND_ALL + SQL_TEMPLATE_SUB_QUERY_IN,
+        String authorNamesString = RangeFormatter.format(authors, true);
+        String selectAuthorIds = String.format(SQL_SELECT_IN,
+                EnumDaoFactory.AUTHOR_COLUMN_ID, EnumDaoFactory.AUTHOR_TABLE_NAME,
+                EnumDaoFactory.AUTHOR_COLUMN_NAME, authorNamesString);
+        String selectBookIds = String.format(SQL_SELECT_IN,
                 EnumDaoFactory.BOOK_AUTHOR_COLUMN_BOOK_ID, EnumDaoFactory.BOOK_AUTHOR_TABLE_NAME,
                 EnumDaoFactory.BOOK_AUTHOR_COLUMN_AUTHOR_ID, selectAuthorIds);
-        query.append(String.format(IN_CLAUSE, JdbcBookDao.COLUMN_ID, selectBookIds));
+        if (anyParams) {
+            query.append(String.format(SQL_AND_IN, JdbcBookDao.COLUMN_ID, selectBookIds));
+        } else {
+            query.append(String.format(SQL_WHERE_IN, JdbcBookDao.COLUMN_ID, selectBookIds));
+        }
     }
 
-    private String getStringsEnumerationString(String[] strings) {
-        if (strings.length == 0) {
-            return "";
+    private void addGenresToQuery() {
+        String genreNamesString = RangeFormatter.format(genres, true);
+        String selectGenreIds = String.format(SQL_SELECT_IN,
+                EnumDaoFactory.GENRE_COLUMN_ID, EnumDaoFactory.GENRE_TABLE_NAME,
+                EnumDaoFactory.GENRE_COLUMN_NAME, genreNamesString);
+        String selectBookIds = String.format(SQL_SELECT_IN,
+                EnumDaoFactory.BOOK_GENRE_COLUMN_BOOK_ID, EnumDaoFactory.BOOK_GENRE_TABLE_NAME,
+                EnumDaoFactory.BOOK_GENRE_COLUMN_GENRE_ID, selectGenreIds);
+        if (anyParams) {
+            query.append(String.format(SQL_AND_IN, JdbcBookDao.COLUMN_ID, selectBookIds));
+        } else {
+            query.append(String.format(SQL_WHERE_IN, JdbcBookDao.COLUMN_ID, selectBookIds));
         }
-        StringBuilder sb = new StringBuilder("'" + strings[0] + "'");
-        for (int i = 1; i < strings.length; i++) {
-            sb.append(", '").append(strings[i]).append("'");
-        }
-        return sb.toString();
-    }
-
-    private String getIntegersEnumerationString(Integer[] integers) {
-        if (integers.length == 0) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder(integers[0] + "");
-        for (int i = 1; i < integers.length; i++) {
-            sb.append(", ").append(integers[i]);
-        }
-        return sb.toString();
     }
 }

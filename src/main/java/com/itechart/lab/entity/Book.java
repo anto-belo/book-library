@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Book implements DBEntity {
-    private int id;
+    private Integer id;
     private String coverUrl;
     private String title;
     private int publisherId;

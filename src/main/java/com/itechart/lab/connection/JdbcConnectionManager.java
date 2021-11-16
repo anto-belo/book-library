@@ -1,8 +1,7 @@
 package com.itechart.lab.connection;
 
 import com.itechart.lab.exception.ConnectionManagerException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -10,8 +9,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
 
+@Log4j2
 public class JdbcConnectionManager implements ConnectionManager {
-    private static final Logger logger = LogManager.getLogger(JdbcConnectionManager.class);
+    private static final JdbcConnectionManager instance = new JdbcConnectionManager();
 
     private static final String DB_URL = "jdbc:mysql://localhost:3306/book_library";
     private static final String DB_USER = "root";
@@ -23,21 +23,17 @@ public class JdbcConnectionManager implements ConnectionManager {
     private static final String MSG_DRV_DEREG_FAIL = "Driver deregistration failed";
 
     private static final String MSG_CONN_OPEN_SUCCESS = "Connection open succeeded";
-    private static final String MSG_TMPL_CONN_OPEN_FAIL = "Connection open failed (%s)";
+    private static final String MSG_CONN_OPEN_FAIL = "Connection open failed (%s)";
     private static final String MSG_CONN_CLOSE_SUCCESS = "Connection close succeeded";
-    private static final String MSG_TMPL_CONN_CLOSE_FAIL = "Connection close failed (%s)";
-
-    private static JdbcConnectionManager instance;
+    private static final String MSG_CONN_CLOSE_FAIL = "Connection close failed (%s)";
 
     private Connection connection;
+    private boolean running;
 
     private JdbcConnectionManager() {
     }
 
     static JdbcConnectionManager getInstance() {
-        if (instance == null) {
-            instance = new JdbcConnectionManager();
-        }
         return instance;
     }
 
@@ -47,18 +43,22 @@ public class JdbcConnectionManager implements ConnectionManager {
     }
 
     @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
     public void init() {
         try {
             registerDrivers();
-            logger.info(MSG_DRV_REG_SUCCESS);
+            log.info(MSG_DRV_REG_SUCCESS);
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-            logger.info(MSG_CONN_OPEN_SUCCESS);
+            log.info(MSG_CONN_OPEN_SUCCESS);
+            running = true;
         } catch (ConnectionManagerException e) {
-            logger.fatal(MSG_DRV_REG_FAIL);
-            //todo abort app
+            log.fatal(e.getMessage());
         } catch (SQLException e) {
-            logger.fatal(String.format(MSG_TMPL_CONN_OPEN_FAIL, e.getMessage()));
-            //todo abort app
+            log.fatal(String.format(MSG_CONN_OPEN_FAIL, e.getMessage()));
         }
     }
 
@@ -66,23 +66,23 @@ public class JdbcConnectionManager implements ConnectionManager {
     public void destroy() {
         try {
             connection.close();
-            logger.info(MSG_CONN_CLOSE_SUCCESS);
+            log.info(MSG_CONN_CLOSE_SUCCESS);
             deregisterDrivers();
-            logger.info(MSG_DRV_DEREG_SUCCESS);
+            log.info(MSG_DRV_DEREG_SUCCESS);
+            running = false;
         } catch (ConnectionManagerException e) {
-            logger.error(MSG_DRV_DEREG_FAIL);
+            log.error(e.getMessage());
         } catch (SQLException e) {
-            logger.error(String.format(MSG_TMPL_CONN_CLOSE_FAIL, e.getMessage()));
+            log.error(String.format(MSG_CONN_CLOSE_FAIL, e.getMessage()));
         }
     }
 
     private void registerDrivers() throws ConnectionManagerException {
         try {
             new com.mysql.cj.jdbc.Driver();
-//            DriverManager.registerDriver(DriverManager.getDriver(DB_URL)); //todo remove if not required
         } catch (SQLException e) {
-            logger.error(e.getMessage());
-            throw new ConnectionManagerException();
+            log.error(e.getMessage());
+            throw new ConnectionManagerException(MSG_DRV_REG_FAIL);
         }
     }
 
@@ -92,9 +92,36 @@ public class JdbcConnectionManager implements ConnectionManager {
             try {
                 DriverManager.deregisterDriver(drivers.nextElement());
             } catch (SQLException e) {
-                logger.error(e.getMessage());
-                throw new ConnectionManagerException();
+                log.error(e.getMessage());
+                throw new ConnectionManagerException(MSG_DRV_DEREG_FAIL);
             }
+        }
+    }
+
+    @Override
+    public void setAutoCommit(boolean autoCommit) throws ConnectionManagerException {
+        try {
+            connection.setAutoCommit(autoCommit);
+        } catch (SQLException e) {
+            throw new ConnectionManagerException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void commit() throws ConnectionManagerException {
+        try {
+            connection.commit();
+        } catch (SQLException e) {
+            throw new ConnectionManagerException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void rollback() throws ConnectionManagerException {
+        try {
+            connection.rollback();
+        } catch (SQLException e) {
+            throw new ConnectionManagerException(e.getMessage());
         }
     }
 }

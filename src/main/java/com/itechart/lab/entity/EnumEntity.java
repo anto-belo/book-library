@@ -10,4 +10,8 @@ import lombok.NoArgsConstructor;
 public class EnumEntity implements DBEntity {
     private Integer id;
     private String value;
+
+    public EnumEntity(String value) {
+        this(null, value);
+    }
 }

@@ -8,8 +8,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Reader implements DBEntity {
-    private int id;
-    private String firstName;
-    private String lastName;
+    private Integer id;
+    private String name;
     private String email;
+
+    public Reader(String name, String email) {
+        this(null, name, email);
+    }
 }
