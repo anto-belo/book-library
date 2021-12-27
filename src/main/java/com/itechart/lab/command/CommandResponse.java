@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public interface CommandResponse {
-    String MSG_CANT_SEND_JSON = "Can't send JSON string";
-    String MSG_CANT_SERIALIZE_TO_JSON = "Can't serialize object to JSON string";
+    String MSG_FAILED_SEND_JSON = "Failed to send JSON string";
+    String MSG_FAILED_SERIALIZE_TO_JSON = "Failed to serialize object to JSON string";
 
     CommandResponse MAIN = new CommandResponse() {
         @Override

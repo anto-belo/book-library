@@ -13,8 +13,8 @@ import java.util.Optional;
 public class ReaderServiceImpl implements ReaderService {
     private static final ReaderServiceImpl instance = new ReaderServiceImpl();
 
-    private static final String MSG_FAILED_FIND_AUTHOR_BY_ID
-            = "DAO failed to find author by id";
+    private static final String MSG_FAILED_FIND_READER_BY_ID
+            = "DAO failed to find reader by id";
     private static final String MSG_FAILED_FIND_READERS_BY_EMAIL_LIKE
             = "DAO failed to find readers by email like (%s)";
 
@@ -31,7 +31,7 @@ public class ReaderServiceImpl implements ReaderService {
             return ReaderDao.getInstance().findById(id);
         } catch (DaoException e) {
             log.error(e.getMessage());
-            throw new ServiceException(MSG_FAILED_FIND_AUTHOR_BY_ID);
+            throw new ServiceException(MSG_FAILED_FIND_READER_BY_ID);
         }
     }
 

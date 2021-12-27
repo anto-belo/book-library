@@ -12,5 +12,5 @@ public interface BorrowDao extends Dao<Borrow> {
 
     List<Borrow> findBorrows(int bookId) throws DaoException;
 
-    List<Borrow> findUnclosedBorrows(String dueDate) throws DaoException;
+    List<Borrow> findBorrowsExpiringOn(String dueDate) throws DaoException;
 }

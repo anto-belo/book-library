@@ -11,12 +11,12 @@ public interface BookDao extends Dao<Book> {
         return JdbcBookDao.getInstance();
     }
 
-    List<Book> findBooksBy(String title, List<String> authors, List<String> genres,
-                           String description) throws DaoException;
-
     Optional<Book> findByIsbn(String isbn) throws DaoException;
 
     List<Book> findBooksInRange(int offset, int amount, boolean availableOnly) throws DaoException;
 
     int getAvailableBooksAmount() throws DaoException;
+
+    List<Book> findBooksBy(String title, List<String> authors, List<String> genres,
+                           String description) throws DaoException;
 }

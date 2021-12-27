@@ -52,12 +52,11 @@ public abstract class AbstractDao<T extends DBEntity> implements Dao<T> {
     protected final String sqlGetRecordsAmount;
 
     AbstractDao(String tableName, String idColumnName, String... otherColumnNames) {
-        this.idColumnName = idColumnName;
-
         List<String> columnNamesList = new ArrayList<>();
         Collections.addAll(columnNamesList, otherColumnNames);
         columnNamesList.add(0, idColumnName);
         columnNames = RangeFormatter.format(columnNamesList, false);
+        this.idColumnName = idColumnName;
 
         sqlSave = String.format(SQL_INSERT, tableName, columnNames,
                 getSavePattern(columnNamesList.size()));
@@ -102,8 +101,13 @@ public abstract class AbstractDao<T extends DBEntity> implements Dao<T> {
     }
 
     @Override
+    public List<T> findRangeById(int id) throws DaoException {
+        return findPreparedEntities(s -> s.setInt(1, id), sqlFindById);
+    }
+
+    @Override
     public Optional<T> findById(int id) throws DaoException {
-        return takeFirst(findPreparedEntities(s -> s.setInt(1, id), sqlFindById));
+        return takeFirst(findRangeById(id));
     }
 
     @Override
@@ -174,8 +178,7 @@ public abstract class AbstractDao<T extends DBEntity> implements Dao<T> {
     private List<T> mapToEntities(ResultSet resultSet) throws SQLException {
         List<T> entities = new ArrayList<>();
         while (resultSet.next()) {
-            final T entity = mapResultSet(resultSet);
-            entities.add(entity);
+            entities.add(mapResultSet(resultSet));
         }
         return entities;
     }
@@ -191,7 +194,7 @@ public abstract class AbstractDao<T extends DBEntity> implements Dao<T> {
     private String getUpdatePattern(String... columnNames) {
         StringBuilder pattern = new StringBuilder(columnNames[0] + " = ?");
         for (int i = 1; i < columnNames.length; i++) {
-            pattern.append(",").append(columnNames[i]).append(" = ?");
+            pattern.append(", ").append(columnNames[i]).append(" = ?");
         }
         return pattern.toString();
     }

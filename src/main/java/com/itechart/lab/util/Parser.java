@@ -8,8 +8,6 @@ import java.util.Optional;
 
 @Log4j2
 public class Parser {
-    private static final String ILLEGAL_NUMBER_FORMAT_MSG = "Illegal number format";
-
     private Parser() {
     }
 
@@ -18,7 +16,7 @@ public class Parser {
         try {
             parsedNumber = Integer.parseInt(number);
         } catch (NumberFormatException e) {
-            log.warn(ILLEGAL_NUMBER_FORMAT_MSG);
+            log.warn(e.getMessage());
             return Optional.empty();
         }
         return Optional.of(parsedNumber);

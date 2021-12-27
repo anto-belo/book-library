@@ -30,19 +30,19 @@ public class JdbcBorrowDao extends AbstractDao<Borrow> implements BorrowDao {
     private static final String SQL_FIND_BORROWS_EXPIRING_ON
             = SQL_SELECT + " WHERE DATE_ADD(%s, INTERVAL %s MONTH) = ? AND %s IS NULL";
 
-    private final String sqlFindBookBorrows;
-    private final String sqlFindUnclosedBorrows;
+    private final String sqlFindBorrows;
+    private final String sqlFindBorrowsExpiringOn;
 
     private JdbcBorrowDao() {
         super(TABLE_NAME, COLUMN_ID, COLUMN_READER_ID, COLUMN_BOOK_ID, COLUMN_BORROW_DATE,
                 COLUMN_FOR_MONTHS, COLUMN_RETURN_DATE, COLUMN_COMMENT, COLUMN_BORROW_STATUS);
-        String sqlFindBookUnclosedBorrows = String.format(SQL_FIND_BOOK_UNCLOSED_BORROWS,
+        String sqlFindUnclosedBorrows = String.format(SQL_FIND_BOOK_UNCLOSED_BORROWS,
                 columnNames, TABLE_NAME, COLUMN_RETURN_DATE, SQL_NULL, COLUMN_BOOK_ID);
         String sqlFindClosedBorrows = String.format(SQL_FIND_BOOK_CLOSED_BORROWS,
                 columnNames, TABLE_NAME, COLUMN_RETURN_DATE, SQL_NOT_NULL, COLUMN_BOOK_ID,
                 COLUMN_RETURN_DATE, SQL_DESC);
-        sqlFindBookBorrows = sqlFindBookUnclosedBorrows + SQL_UNION + sqlFindClosedBorrows;
-        sqlFindUnclosedBorrows = String.format(SQL_FIND_BORROWS_EXPIRING_ON,
+        sqlFindBorrows = sqlFindUnclosedBorrows + SQL_UNION + sqlFindClosedBorrows;
+        sqlFindBorrowsExpiringOn = String.format(SQL_FIND_BORROWS_EXPIRING_ON,
                 columnNames, TABLE_NAME, COLUMN_BORROW_DATE, COLUMN_FOR_MONTHS, COLUMN_RETURN_DATE);
     }
 
@@ -95,12 +95,12 @@ public class JdbcBorrowDao extends AbstractDao<Borrow> implements BorrowDao {
         return findPreparedEntities(s -> {
             s.setInt(1, bookId);
             s.setInt(2, bookId);
-        }, sqlFindBookBorrows);
+        }, sqlFindBorrows);
     }
 
     @Override
-    public List<Borrow> findUnclosedBorrows(String dueDate) throws DaoException {
-        return findPreparedEntities(
-                s -> s.setString(1, dueDate), sqlFindUnclosedBorrows);
+    public List<Borrow> findBorrowsExpiringOn(String dueDate) throws DaoException {
+        return findPreparedEntities(s ->
+                s.setString(1, dueDate), sqlFindBorrowsExpiringOn);
     }
 }

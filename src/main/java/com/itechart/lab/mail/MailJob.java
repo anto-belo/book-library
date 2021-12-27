@@ -71,21 +71,21 @@ public class MailJob implements Job {
         try {
             String dueDateInWeek = getFormattedDateNowPlusDays(7);
             BorrowService.getInstance()
-                    .findUnclosedBorrows(dueDateInWeek).stream()
+                    .findBorrowsExpiringOn(dueDateInWeek).stream()
                     .map(MailBorrow::new)
                     .filter(b -> b.getReaderEmail() != null)
                     .forEach(b -> mail(b, dueDateInWeek, true));
 
             String dueDateTomorrow = getFormattedDateNowPlusDays(1);
             BorrowService.getInstance()
-                    .findUnclosedBorrows(dueDateTomorrow).stream()
+                    .findBorrowsExpiringOn(dueDateTomorrow).stream()
                     .map(MailBorrow::new)
                     .filter(b -> b.getReaderEmail() != null)
                     .forEach(b -> mail(b, dueDateTomorrow, true));
 
             String dueDateYesterday = getFormattedDateNowPlusDays(-1);
             BorrowService.getInstance()
-                    .findUnclosedBorrows(dueDateYesterday).stream()
+                    .findBorrowsExpiringOn(dueDateYesterday).stream()
                     .map(MailBorrow::new)
                     .filter(b -> b.getReaderEmail() != null)
                     .forEach(b -> mail(b, dueDateYesterday, false));

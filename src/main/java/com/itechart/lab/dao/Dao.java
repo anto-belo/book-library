@@ -11,6 +11,8 @@ public interface Dao<T extends DBEntity> {
 
     List<T> findAll() throws DaoException;
 
+    List<T> findRangeById(int id) throws DaoException;
+
     Optional<T> findById(int id) throws DaoException;
 
     void update(T entity) throws DaoException;

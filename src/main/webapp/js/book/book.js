@@ -44,6 +44,7 @@ window.addEventListener("DOMContentLoaded", () => {
         remainingAmountField.name = 'book-remaining-amount';
         remainingAmountField.value = remainingAmount;
         FORM_BOOK_EDIT.appendChild(remainingAmountField);
+        updateAvailabilityInfo();
     });
 });
 

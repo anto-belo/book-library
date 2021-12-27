@@ -19,12 +19,12 @@ public class BorrowServiceImpl implements BorrowService {
 
     private static final String MSG_FAILED_FIND_BORROWS
             = "DAO failed to find borrows (#%d)";
-    private static final String MSG_FAILED_FIND_UNCLOSED_BORROWS_BY_DUE_DATE
-            = "Failed to find unclosed borrows by due date %s";
     private static final String MSG_FAILED_UPDATE_BORROW
             = "DAO failed to update borrow (%s)";
     private static final String MSG_FAILED_SAVE_BORROW
             = "DAO failed to save borrow (%s)";
+    private static final String MSG_FAILED_FIND_BORROWS_EXPIRING_ON
+            = "DAO failed to find borrows expiring on %s";
 
     private BorrowServiceImpl() {
     }
@@ -88,13 +88,13 @@ public class BorrowServiceImpl implements BorrowService {
     }
 
     @Override
-    public List<Borrow> findUnclosedBorrows(String dueDate) throws ServiceException {
+    public List<Borrow> findBorrowsExpiringOn(String dueDate) throws ServiceException {
         try {
-            return BorrowDao.getInstance().findUnclosedBorrows(dueDate);
+            return BorrowDao.getInstance().findBorrowsExpiringOn(dueDate);
         } catch (DaoException e) {
             log.error(e.getMessage());
             throw new ServiceException(
-                    String.format(MSG_FAILED_FIND_UNCLOSED_BORROWS_BY_DUE_DATE, dueDate));
+                    String.format(MSG_FAILED_FIND_BORROWS_EXPIRING_ON, dueDate));
         }
     }
 }

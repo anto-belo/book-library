@@ -25,8 +25,6 @@ public class BookServiceImpl implements BookService {
 
     private static final String MSG_FAILED_FIND_BOOK_BY_ID
             = "DAO failed to find book by id (#%d)";
-    private static final String MSG_FAILED_FIND_BOOK_BY_ISBN
-            = "DAO failed to find book by ISBN (%s)";
     private static final String MSG_FAILED_FIND_BOOKS_IN_RANGE
             = "DAO failed to find books in range (%d - %d)";
     private static final String MSG_FAILED_FIND_BOOK_AUTHORS
@@ -43,18 +41,20 @@ public class BookServiceImpl implements BookService {
             = "Connection manager is not responding";
     private static final String MSG_FAILED_SAVE_BOOK_INFO
             = "DAOs failed to save book info";
-    private static final String MSG_FAILED_FIND_FILTERED_BOOKS
-            = "DAO failed to find filtered books";
     private static final String MSG_FAILED_FIND_OR_ADD_PUBLISHER
             = "DAO failed to find or add publisher (%s)";
     private static final String MSG_FAILED_SAVE_BOOK
             = "DAO failed to save book (%s)";
+    private static final String MSG_FAILED_FIND_BOOK_BY_ISBN
+            = "DAO failed to find book by ISBN (%s)";
     private static final String MSG_FAILED_UPDATE_BOOK
             = "DAO failed to update book (%s)";
     private static final String MSG_FAILED_FIND_OR_ADD_ENTITIES
             = "DAO failed to find or add entities";
     private static final String MSG_FAILED_LINK_BOOK_TO_ENTITIES
             = "Failed to link book to entities";
+    private static final String MSG_FAILED_FIND_FILTERED_BOOKS
+            = "DAO failed to find filtered books";
 
     private BookServiceImpl() {
     }
@@ -70,15 +70,6 @@ public class BookServiceImpl implements BookService {
         } catch (DaoException e) {
             log.error(e.getMessage());
             throw new ServiceException(String.format(MSG_FAILED_FIND_BOOK_BY_ID, id));
-        }
-    }
-
-    private Optional<Book> findByIsbn(String isbn) throws ServiceException {
-        try {
-            return BookDao.getInstance().findByIsbn(isbn);
-        } catch (DaoException e) {
-            log.error(e.getMessage());
-            throw new ServiceException(String.format(MSG_FAILED_FIND_BOOK_BY_ISBN, isbn));
         }
     }
 
@@ -206,14 +197,12 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    @Override
-    public List<Book> search(String title, List<String> authors,
-                             List<String> genres, String description) throws ServiceException {
+    private Optional<Book> findByIsbn(String isbn) throws ServiceException {
         try {
-            return BookDao.getInstance().findBooksBy(title, authors, genres, description);
+            return BookDao.getInstance().findByIsbn(isbn);
         } catch (DaoException e) {
             log.error(e.getMessage());
-            throw new ServiceException(MSG_FAILED_FIND_FILTERED_BOOKS);
+            throw new ServiceException(String.format(MSG_FAILED_FIND_BOOK_BY_ISBN, isbn));
         }
     }
 
@@ -282,6 +271,17 @@ public class BookServiceImpl implements BookService {
         } catch (DaoException e) {
             log.error(e.getMessage());
             throw new ServiceException(MSG_FAILED_LINK_BOOK_TO_ENTITIES);
+        }
+    }
+
+    @Override
+    public List<Book> search(String title, List<String> authors,
+                             List<String> genres, String description) throws ServiceException {
+        try {
+            return BookDao.getInstance().findBooksBy(title, authors, genres, description);
+        } catch (DaoException e) {
+            log.error(e.getMessage());
+            throw new ServiceException(MSG_FAILED_FIND_FILTERED_BOOKS);
         }
     }
 }

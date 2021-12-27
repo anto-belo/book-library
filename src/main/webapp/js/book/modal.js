@@ -42,11 +42,7 @@ function fillModal(borrowData, isFromDb) {
     FOR_MONTHS_SELECT.value = borrow[BORROW_FOR_MONTHS_PROPERTY];
     FOR_MONTHS_SELECT.setAttribute('disabled', '');
 
-    if (isFromDb) {
-        BORROW_STATUS_SELECT_GROUP.classList.toggle('d-none', false);
-    } else {
-        BORROW_STATUS_SELECT_GROUP.classList.toggle('d-none', true);
-    }
+    BORROW_STATUS_SELECT_GROUP.classList.toggle('d-none', !isFromDb);
     let borrowStatus = borrow[BORROW_STATUS_PROPERTY];
     if (borrowStatus != null) {
         BORROW_STATUS_SELECT.value = borrowStatus;

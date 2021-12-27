@@ -12,8 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
-import static com.itechart.lab.command.CommandResponse.MSG_CANT_SEND_JSON;
-import static com.itechart.lab.command.CommandResponse.MSG_CANT_SERIALIZE_TO_JSON;
+import static com.itechart.lab.command.CommandResponse.MSG_FAILED_SEND_JSON;
+import static com.itechart.lab.command.CommandResponse.MSG_FAILED_SERIALIZE_TO_JSON;
 import static com.itechart.lab.command.CommandResponse.sendJson;
 
 @Log4j2
@@ -42,7 +42,7 @@ public class FindReadersByEmailLikeCommand implements Command {
         String email = request.getParameter(EMAIL_PARAMETER_NAME);
         if (email == null) {
             if (!sendJson(response, EMPTY_JSON)) {
-                log.error(MSG_CANT_SEND_JSON);
+                log.error(MSG_FAILED_SEND_JSON);
             }
         }
         List<Reader> readers = null;
@@ -58,9 +58,9 @@ public class FindReadersByEmailLikeCommand implements Command {
         try {
             sendJson(response, mapper.writeValueAsString(readers));
         } catch (JsonProcessingException e) {
-            log.error(MSG_CANT_SERIALIZE_TO_JSON);
+            log.error(MSG_FAILED_SERIALIZE_TO_JSON);
             if (!sendJson(response, EMPTY_JSON)) {
-                log.error(MSG_CANT_SEND_JSON);
+                log.error(MSG_FAILED_SEND_JSON);
             }
         }
     }

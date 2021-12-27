@@ -39,8 +39,6 @@ function renderPage() {
         }
         addBorrowToTable(borrow, true)
     });
-
-    updateAvailabilityInfo();
 }
 
 function updateAvailabilityInfo() {
@@ -50,6 +48,7 @@ function updateAvailabilityInfo() {
         H6_AVAILABILITY_LABEL.id = 'availability-label';
         DIV_BOOK_DATA_COLUMN.insertBefore(H6_AVAILABILITY_LABEL, DIV_BOOK_DATA_COLUMN.firstChild);
     }
+    remainingAmountField.value = remainingAmount;
     if (remainingAmount > 0) {
         H6_AVAILABILITY_LABEL.innerHTML = `<i class="fa fa-check"></i>&nbsp;Available (${remainingAmount} out of ${totalAmount})`;
         H6_AVAILABILITY_LABEL.style.background = 'var(--bs-green)';
@@ -78,7 +77,7 @@ INPUT_BOOK_TOTAL_AMOUNT.onchange = () => {
     let newTotalAmount = Math.min(100, +INPUT_BOOK_TOTAL_AMOUNT.value);
     totalAmount = Math.max(newTotalAmount, booksInUse);
     remainingAmount = totalAmount - booksInUse;
-    remainingAmountField.value = remainingAmount;
+    //remainingAmountField.value = remainingAmount;
     INPUT_BOOK_TOTAL_AMOUNT.value = totalAmount;
     updateAvailabilityInfo();
 }

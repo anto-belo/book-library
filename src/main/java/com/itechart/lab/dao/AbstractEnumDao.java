@@ -16,7 +16,6 @@ public abstract class AbstractEnumDao<T extends DBEntity, V> extends AbstractDao
     protected final String valueColumnName;
 
     protected final String sqlFindByIdsRange;
-    protected final String sqlFindByValuesRange;
     protected final String sqlFindByValue;
 
     protected AbstractEnumDao(String tableName, String idColumnName, String... otherColumnNames) {
@@ -25,8 +24,6 @@ public abstract class AbstractEnumDao<T extends DBEntity, V> extends AbstractDao
 
         sqlFindByIdsRange = String.format(SQL_SELECT_IN,
                 columnNames, tableName, idColumnName, SQL_STUB);
-        sqlFindByValuesRange = String.format(SQL_SELECT_IN,
-                columnNames, tableName, otherColumnNames[0], SQL_STUB);
         sqlFindByValue = String.format(SQL_SELECT_BY, columnNames, tableName, otherColumnNames[0]);
     }
 
@@ -40,11 +37,6 @@ public abstract class AbstractEnumDao<T extends DBEntity, V> extends AbstractDao
     void prepareUpdateStatement(PreparedStatement statement, T entity) throws SQLException {
         statement.setObject(1, getValue(entity));
         statement.setInt(2, getId(entity));
-    }
-
-    @Override
-    public List<T> findRangeById(int id) throws DaoException {
-        return findPreparedEntities(s -> s.setInt(1, id), sqlFindById);
     }
 
     @Override

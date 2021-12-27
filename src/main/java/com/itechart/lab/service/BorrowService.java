@@ -15,5 +15,5 @@ public interface BorrowService {
 
     void save(BorrowRecord record, int bookId) throws ServiceException;
 
-    List<Borrow> findUnclosedBorrows(String dueDate) throws ServiceException;
+    List<Borrow> findBorrowsExpiringOn(String dueDate) throws ServiceException;
 }
