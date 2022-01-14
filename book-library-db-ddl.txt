@@ -1,0 +1,117 @@
+create table author
+(
+	id int auto_increment
+		primary key,
+	a_name varchar(45) not null,
+	constraint author_name_uindex
+		unique (a_name)
+);
+
+create table borrow_status
+(
+	id int auto_increment
+		primary key,
+	bs_value varchar(20) not null,
+	constraint borrow_status_bs_value_uindex
+		unique (bs_value)
+);
+
+create table genre
+(
+	id int auto_increment
+		primary key,
+	g_name varchar(45) not null,
+	constraint genre_name_uindex
+		unique (g_name)
+);
+
+create table publisher
+(
+	id int auto_increment
+		primary key,
+	p_name varchar(45) not null,
+	constraint publisher_name_uindex
+		unique (p_name)
+);
+
+create table book
+(
+	id int auto_increment
+		primary key,
+	cover_url varchar(100) null,
+	title varchar(45) not null,
+	publisher_id int not null,
+	publish_year int not null,
+	page_count int not null,
+	isbn varchar(20) not null,
+	total_amount int not null,
+	remaining_amount int not null,
+	book_description text null,
+	constraint book_library_ISBN_uindex
+		unique (isbn),
+	constraint book_library_publisher_id_fk
+		foreign key (publisher_id) references publisher (id)
+			on update cascade
+);
+
+create table book_author
+(
+	book_id int not null,
+	author_id int not null,
+	primary key (book_id, author_id),
+	constraint book_authors_author_id_fk
+		foreign key (author_id) references author (id)
+			on update cascade,
+	constraint book_authors_book_id_fk
+		foreign key (book_id) references book (id)
+			on update cascade on delete cascade
+);
+
+create table book_genre
+(
+	book_id int not null,
+	genre_id int not null,
+	primary key (book_id, genre_id),
+	constraint book_genres_book_id_fk
+		foreign key (book_id) references book (id)
+			on update cascade on delete cascade,
+	constraint book_genres_genre_id_fk
+		foreign key (genre_id) references genre (id)
+			on update cascade
+);
+
+create table reader
+(
+	id int auto_increment
+		primary key,
+	r_name varchar(45) not null,
+	email varchar(45) not null,
+	constraint reader_r_email_uindex
+		unique (email)
+);
+
+create table borrow
+(
+	id int auto_increment
+		primary key,
+	reader_id int not null,
+	book_id int not null,
+	borrow_date date not null,
+	for_months int not null,
+	return_date date null,
+	borrow_comment text null,
+	borrow_status int null,
+	constraint borrow_book_id_fk
+		foreign key (book_id) references book (id)
+			on update cascade on delete cascade,
+	constraint borrow_borrow_status_id_fk
+		foreign key (borrow_status) references borrow_status (id)
+			on update cascade,
+	constraint borrow_reader_id_fk
+		foreign key (reader_id) references reader (id)
+			on update cascade on delete cascade
+);
+
+create index borrow_time_period_id_fk
+	on borrow (for_months);
+
